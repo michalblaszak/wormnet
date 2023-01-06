@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+    <script
+    src="https://code.jquery.com/jquery-3.6.3.min.js"
+    integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU="
+    crossorigin="anonymous"></script>
+</head>
+<body>
+    <input id="msg" type="text"></input>
+    <button id="send">
+        Send
+    </button><BR>
+    <textarea id="log" cols=100 rows=50>
+    </textarea>
+    <script>
+var sock = new WebSocket("ws://{{servername}}:40080/ws");
+
+sock.onopen = ()=>{
+    console.log('open')
+}
+sock.onerror = (e)=>{
+    console.log('error',e)
+}
+sock.onclose = (e)=>{
+    console.log('close', e)
+}
+sock.onmessage = (e)=>{
+    resp = JSON.parse(e.data);
+    if(resp["status"] == "OK") {
+        $("#log").val(
+                resp["value"] +"\n" + $("#log").val());
+    } else {
+        console.log("fail:" + e.data)
+    }
+    // $("#log").val(
+    //         e.data +"\n" + $("#log").val());
+}
+$("#msg").keypress(function(e){
+    if (e.which == 13)
+    {
+    sock.send($("#msg").val());
+    $("#msg").val("");
+    }
+});
+$("#send").click(()=>{
+    sock.send($("#msg").val());
+    $("#msg").val("");
+});
+
+function requestUpdate() {
+    sock.send({"command": "UPDATE_THREAD"})
+}
+setInterval(requestUpdate, 5000);
+
+    </script>
+</body>
+</html>
